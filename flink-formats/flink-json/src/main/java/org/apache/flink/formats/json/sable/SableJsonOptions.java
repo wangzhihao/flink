@@ -16,14 +16,14 @@
  * limitations under the License.
  */
 
-package org.apache.flink.formats.json.maxwell;
+package org.apache.flink.formats.json.sable;
 
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.ReadableConfig;
 import org.apache.flink.formats.json.JsonOptions;
 
-/** Option utils for maxwell-json format. */
-public class MaxwellJsonOptions {
+/** Option utils for sable-json format. */
+public class SableJsonOptions {
 
     public static final ConfigOption<Boolean> IGNORE_PARSE_ERRORS = JsonOptions.IGNORE_PARSE_ERRORS;
 
@@ -38,13 +38,8 @@ public class MaxwellJsonOptions {
     // Validation
     // --------------------------------------------------------------------------------------------
 
-    /** Validator for maxwell decoding format. */
+    /** Validator for sable decoding format. */
     public static void validateDecodingFormatOptions(ReadableConfig tableOptions) {
         JsonOptions.validateDecodingFormatOptions(tableOptions);
-    }
-
-    /** Validator for maxwell encoding format. */
-    public static void validateEncodingFormatOptions(ReadableConfig tableOptions) {
-        JsonOptions.validateEncodingFormatOptions(tableOptions);
     }
 }

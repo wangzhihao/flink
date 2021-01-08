@@ -23,7 +23,6 @@ import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.formats.json.JsonRowDataDeserializationSchema;
 import org.apache.flink.formats.json.TimestampFormat;
 import org.apache.flink.table.api.DataTypes;
-import org.apache.flink.table.data.GenericRowData;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.types.DataType;
 import org.apache.flink.table.types.logical.RowType;
@@ -38,13 +37,12 @@ import static org.apache.flink.table.types.utils.TypeConversions.fromLogicalToDa
 
 /**
  * Deserialization schema from Sable JSON to Flink Table/SQL internal data structure {@link
- * RowData}. The deserialization schema knows Sable's schema definition and can extract the
- * database data and convert into {@link RowData} with {@link RowKind}.
+ * RowData}. The deserialization schema knows Sable's schema definition and can extract the database
+ * data and convert into {@link RowData} with {@link RowKind}.
  *
  * <p>Deserializes a <code>byte[]</code> message as a JSON object and reads the specified fields.
  *
  * <p>Failures during deserialization are forwarded as wrapped IOExceptions.
- *
  */
 public class SableJsonDeserializationSchema implements DeserializationSchema<RowData> {
     private static final long serialVersionUID = 1L;
@@ -159,8 +157,8 @@ public class SableJsonDeserializationSchema implements DeserializationSchema<Row
         // but we don't need them
         return (RowType)
                 DataTypes.ROW(
-                        DataTypes.FIELD("content", databaseSchema),
-                        DataTypes.FIELD("type", DataTypes.STRING()))
+                                DataTypes.FIELD("content", databaseSchema),
+                                DataTypes.FIELD("type", DataTypes.STRING()))
                         .getLogicalType();
     }
 }
