@@ -95,16 +95,21 @@ public class SableJsonDeserializationSchema implements DeserializationSchema<Row
             RowData row = jsonDeserializer.deserialize(message);
             String type = row.getString(1).toString(); // "type" field
 
-            // "data" field is a row, contains deleted rows
-            RowData delete = row.getRow(0, fieldCount);
-            delete.setRowKind(RowKind.DELETE);
-            out.collect(delete);
-
             if (OP_INSERT.equals(type) || OP_UPDATE.equals(type)) {
+                // "data" field is a row, contains deleted rows
+                RowData delete = row.getRow(0, fieldCount);
+                delete.setRowKind(RowKind.DELETE);
+                out.collect(delete);
+
                 // "data" field is a row, contains inserted rows
                 RowData insert = row.getRow(0, fieldCount);
                 insert.setRowKind(RowKind.INSERT);
                 out.collect(insert);
+            } else if (OP_DELETE.equals(type)) {
+                // "data" field is a row, contains deleted rows
+                RowData delete = row.getRow(0, fieldCount);
+                delete.setRowKind(RowKind.DELETE);
+                out.collect(delete);
             } else {
                 if (!ignoreParseErrors) {
                     throw new IOException(
