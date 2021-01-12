@@ -26,6 +26,7 @@ import org.apache.flink.streaming.connectors.kinesis.model.SentinelSequenceNumbe
 import org.apache.flink.streaming.connectors.kinesis.model.SequenceNumber;
 import org.apache.flink.streaming.connectors.kinesis.model.StreamShardHandle;
 import org.apache.flink.streaming.connectors.kinesis.serialization.KinesisDeserializationSchema;
+import org.apache.flink.streaming.connectors.kinesis.util.KinesisCollector;
 
 import com.amazonaws.services.kinesis.clientlibrary.types.UserRecord;
 import org.slf4j.Logger;
@@ -71,6 +72,8 @@ public class ShardConsumer<T> implements Runnable {
 
     private final RecordPublisher recordPublisher;
 
+    private final KinesisCollector<T> kinesisCollector;
+
     /**
      * Creates a shard consumer.
      *
@@ -103,6 +106,7 @@ public class ShardConsumer<T> implements Runnable {
                 "Should not start a ShardConsumer if the shard has already been completely read.");
 
         this.deserializer = shardDeserializer;
+        this.kinesisCollector = new KinesisCollector<T>();
     }
 
     @Override
@@ -186,16 +190,15 @@ public class ShardConsumer<T> implements Runnable {
 
         final long approxArrivalTimestamp = record.getApproximateArrivalTimestamp().getTime();
 
-        final T value;
         try {
-            value =
-                    deserializer.deserialize(
-                            dataBytes,
-                            record.getPartitionKey(),
-                            record.getSequenceNumber(),
-                            approxArrivalTimestamp,
-                            subscribedShard.getStreamName(),
-                            subscribedShard.getShard().getShardId());
+            deserializer.deserialize(
+                    dataBytes,
+                    record.getPartitionKey(),
+                    record.getSequenceNumber(),
+                    approxArrivalTimestamp,
+                    subscribedShard.getStreamName(),
+                    subscribedShard.getShard().getShardId(),
+                    kinesisCollector);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -206,8 +209,11 @@ public class ShardConsumer<T> implements Runnable {
                                 record.getSequenceNumber(), record.getSubSequenceNumber())
                         : new SequenceNumber(record.getSequenceNumber());
 
-        fetcherRef.emitRecordAndUpdateState(
-                value, approxArrivalTimestamp, subscribedShardStateIndex, collectedSequenceNumber);
+        fetcherRef.emitRecordsAndUpdateState(
+                kinesisCollector.getRecords(),
+                approxArrivalTimestamp,
+                subscribedShardStateIndex,
+                collectedSequenceNumber);
 
         this.lastSequenceNum = collectedSequenceNumber;
     }
