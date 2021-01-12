@@ -93,6 +93,7 @@ public class SableJsonDeserializationSchema implements DeserializationSchema<Row
     public void deserialize(byte[] message, Collector<RowData> out) throws IOException {
         try {
             RowData row = jsonDeserializer.deserialize(message);
+            RowData row2 = jsonDeserializer.deserialize(message);
             String type = row.getString(1).toString(); // "type" field
 
             if (OP_INSERT.equals(type) || OP_UPDATE.equals(type)) {
@@ -102,7 +103,7 @@ public class SableJsonDeserializationSchema implements DeserializationSchema<Row
                 out.collect(delete);
 
                 // "data" field is a row, contains inserted rows
-                RowData insert = row.getRow(0, fieldCount);
+                RowData insert = row2.getRow(0, fieldCount);
                 insert.setRowKind(RowKind.INSERT);
                 out.collect(insert);
             } else if (OP_DELETE.equals(type)) {
