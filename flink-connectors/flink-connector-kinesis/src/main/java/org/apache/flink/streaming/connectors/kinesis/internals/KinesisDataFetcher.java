@@ -933,10 +933,10 @@ public class KinesisDataFetcher<T> {
     // ------------------------------------------------------------------------
 
     /**
-     * Prepare a record and hand it over to the {@link RecordEmitter}, which may collect it
+     * Prepare records and hand them over to the {@link RecordEmitter}, which may collect them
      * asynchronously. This method is called by {@link ShardConsumer}s.
      *
-     * @param record the record to collect
+     * @param records the records to collect
      * @param recordTimestamp timestamp to attach to the collected record
      * @param shardStateIndex index of the shard to update in subscribedShardsState; this index
      *     should be the returned value from {@link
@@ -944,8 +944,8 @@ public class KinesisDataFetcher<T> {
      *     the shard state was registered.
      * @param lastSequenceNumber the last sequence number value to update
      */
-    protected void emitRecordAndUpdateState(
-            T record,
+    protected void emitRecordsAndUpdateState(
+            Queue<T> records,
             long recordTimestamp,
             int shardStateIndex,
             SequenceNumber lastSequenceNumber) {
@@ -962,14 +962,21 @@ public class KinesisDataFetcher<T> {
         sws.lastRecordTimestamp = recordTimestamp;
         sws.lastUpdated = getCurrentTimeMillis();
 
-        RecordWrapper<T> recordWrapper = new RecordWrapper<>(record, recordTimestamp);
-        recordWrapper.shardStateIndex = shardStateIndex;
-        recordWrapper.lastSequenceNumber = lastSequenceNumber;
-        recordWrapper.watermark = watermark;
-        try {
-            sws.emitQueue.put(recordWrapper);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+        // emit the records, using the checkpoint lock to guarantee
+        // atomicity of record emission and offset state update
+        synchronized (checkpointLock) {
+            T record;
+            while ((record = records.poll()) != null) {
+                RecordWrapper<T> recordWrapper = new RecordWrapper<>(record, recordTimestamp);
+                recordWrapper.shardStateIndex = shardStateIndex;
+                recordWrapper.lastSequenceNumber = lastSequenceNumber;
+                recordWrapper.watermark = watermark;
+                try {
+                    sws.emitQueue.put(recordWrapper);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
         }
     }
 

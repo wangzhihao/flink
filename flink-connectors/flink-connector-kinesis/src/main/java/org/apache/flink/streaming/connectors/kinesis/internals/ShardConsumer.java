@@ -186,16 +186,15 @@ public class ShardConsumer<T> implements Runnable {
 
         final long approxArrivalTimestamp = record.getApproximateArrivalTimestamp().getTime();
 
-        final T value;
         try {
-            value =
-                    deserializer.deserialize(
-                            dataBytes,
-                            record.getPartitionKey(),
-                            record.getSequenceNumber(),
-                            approxArrivalTimestamp,
-                            subscribedShard.getStreamName(),
-                            subscribedShard.getShard().getShardId());
+            deserializer.deserialize(
+                    dataBytes,
+                    record.getPartitionKey(),
+                    record.getSequenceNumber(),
+                    approxArrivalTimestamp,
+                    subscribedShard.getStreamName(),
+                    subscribedShard.getShard().getShardId(),
+                    kinesisCollector);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -206,8 +205,11 @@ public class ShardConsumer<T> implements Runnable {
                                 record.getSequenceNumber(), record.getSubSequenceNumber())
                         : new SequenceNumber(record.getSequenceNumber());
 
-        fetcherRef.emitRecordAndUpdateState(
-                value, approxArrivalTimestamp, subscribedShardStateIndex, collectedSequenceNumber);
+        fetcherRef.emitRecordsAndUpdateState(
+                 kinesisCollector.getRecords(),
+                 approxArrivalTimestamp,
+                 subscribedShardStateIndex,
+                 collectedSequenceNumber);
 
         this.lastSequenceNum = collectedSequenceNumber;
     }
