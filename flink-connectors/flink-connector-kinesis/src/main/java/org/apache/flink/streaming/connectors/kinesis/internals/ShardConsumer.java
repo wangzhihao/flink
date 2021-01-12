@@ -71,6 +71,8 @@ public class ShardConsumer<T> implements Runnable {
 
     private final RecordPublisher recordPublisher;
 
+    private final KinesisCollector kinesisCollector;
+
     /**
      * Creates a shard consumer.
      *
@@ -228,5 +230,21 @@ public class ShardConsumer<T> implements Runnable {
 
         return !record.getSequenceNumber().equals(lastSequenceNum.getSequenceNumber())
                 || record.getSubSequenceNumber() > lastSequenceNum.getSubSequenceNumber();
+    }
+
+    private class KinesisCollector implements Collector<T> {
+        private final Queue<T> records = new ArrayDeque<>();
+
+        @Override
+        public void collect(T record) {
+            records.add(record);
+        }
+
+        public Queue<T> getRecords() {
+            return records;
+        }
+
+        @Override
+        public void close() {}
     }
 }
