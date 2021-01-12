@@ -46,18 +46,6 @@ public class KinesisDeserializationSchemaWrapper<T> implements KinesisDeserializ
     }
 
     @Override
-    public T deserialize(
-            byte[] recordValue,
-            String partitionKey,
-            String seqNum,
-            long approxArrivalTimestamp,
-            String stream,
-            String shardId)
-            throws IOException {
-        throw new IOException("Should never be called");
-    }
-
-    @Override
     public void deserialize(
             byte[] recordValue,
             String partitionKey,
@@ -65,7 +53,7 @@ public class KinesisDeserializationSchemaWrapper<T> implements KinesisDeserializ
             long approxArrivalTimestamp,
             String stream,
             String shardId,
-            Collector<T> collector)
+            Collector<T> out)
             throws IOException {
         return deserializationSchema.deserialize(recordValue, out);
     }

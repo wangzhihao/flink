@@ -71,7 +71,7 @@ public class ShardConsumer<T> implements Runnable {
 
     private final RecordPublisher recordPublisher;
 
-    private final KinesisCollector kinesisCollector;
+    private final KinesisCollector<T> kinesisCollector;
 
     /**
      * Creates a shard consumer.
@@ -105,6 +105,7 @@ public class ShardConsumer<T> implements Runnable {
                 "Should not start a ShardConsumer if the shard has already been completely read.");
 
         this.deserializer = shardDeserializer;
+        this.kinesisCollector = new KinesisCollector<T>();
     }
 
     @Override
@@ -230,21 +231,5 @@ public class ShardConsumer<T> implements Runnable {
 
         return !record.getSequenceNumber().equals(lastSequenceNum.getSequenceNumber())
                 || record.getSubSequenceNumber() > lastSequenceNum.getSubSequenceNumber();
-    }
-
-    private class KinesisCollector implements Collector<T> {
-        private final Queue<T> records = new ArrayDeque<>();
-
-        @Override
-        public void collect(T record) {
-            records.add(record);
-        }
-
-        public Queue<T> getRecords() {
-            return records;
-        }
-
-        @Override
-        public void close() {}
     }
 }

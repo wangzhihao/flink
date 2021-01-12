@@ -46,31 +46,6 @@ public interface KinesisDeserializationSchema<T> extends Serializable, ResultTyp
     default void open(DeserializationSchema.InitializationContext context) throws Exception {}
 
     /**
-     * Deserializes a Kinesis record's bytes. If the record cannot be deserialized, {@code null} may
-     * be returned. This informs the Flink Kinesis Consumer to process the Kinesis record without
-     * producing any output for it, i.e. effectively "skipping" the record.
-     *
-     * @param recordValue the record's value as a byte array
-     * @param partitionKey the record's partition key at the time of writing
-     * @param seqNum the sequence number of this record in the Kinesis shard
-     * @param approxArrivalTimestamp the server-side timestamp of when Kinesis received and stored
-     *     the record
-     * @param stream the name of the Kinesis stream that this record was sent to
-     * @param shardId The identifier of the shard the record was sent to
-     * @return the deserialized message as an Java object ({@code null} if the message cannot be
-     *     deserialized).
-     * @throws IOException
-     */
-    T deserialize(
-            byte[] recordValue,
-            String partitionKey,
-            String seqNum,
-            long approxArrivalTimestamp,
-            String stream,
-            String shardId)
-            throws IOException;
-
-    /**
      * Deserializes the Kinesis record.
      *
      * <p>Can output multiple records through the {@link Collector}. Note that number and size of
@@ -89,7 +64,7 @@ public interface KinesisDeserializationSchema<T> extends Serializable, ResultTyp
      * @param out The collector to put the resulting messages.
      * @throws IOException
      */
-    default void deserialize(
+    void deserialize(
             byte[] recordValue,
             String partitionKey,
             String seqNum,
@@ -98,12 +73,6 @@ public interface KinesisDeserializationSchema<T> extends Serializable, ResultTyp
             String shardId,
             Collector<T> out)
             throws IOException;
-        T deserialized = deserialize(recordValue, partitionKey, seqNum,
-                approxArrivalTimestamp, stream, shardId);
-        if (deserialized != null) {
-            out.collect(deserialized);
-        }
-    }
 
     /**
      * Method to decide whether the element signals the end of the stream. If true is returned the

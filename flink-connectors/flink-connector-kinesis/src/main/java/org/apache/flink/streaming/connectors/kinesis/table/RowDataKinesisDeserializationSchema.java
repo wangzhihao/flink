@@ -108,16 +108,16 @@ public final class RowDataKinesisDeserializationSchema
     }
 
     @Override
-    public RowData deserialize(
+    public void deserialize(
             byte[] recordValue,
             String partitionKey,
             String seqNum,
             long approxArrivalTimestamp,
             String stream,
-            String shardId)
+            String shardId,
+            Collector<RowData> out)
             throws IOException {
 
-        RowData physicalRow = physicalDeserializer.deserialize(recordValue);
         GenericRowData metadataRow = new GenericRowData(requestedMetadataFields.size());
 
         for (int i = 0; i < metadataRow.getArity(); i++) {
@@ -134,9 +134,14 @@ public final class RowDataKinesisDeserializationSchema
             }
         }
 
-        JoinedRowData joinedRowData = new JoinedRowData(physicalRow, metadataRow);
-        joinedRowData.setRowKind(physicalRow.getRowKind());
-        return joinedRowData;
+        KinesisCollector<RowData> kinesisCollector = new KinesisCollector<RowData>();
+        physicalDeserializer.deserialize(recordValue, kinesisCollector);
+        RowData physicalRow;
+        while ((physicalRow = kinesisCollector.getRecords().poll()) != null) {
+            JoinedRowData joinedRowData = new JoinedRowData(physicalRow, metadataRow);
+            joinedRowData.setRowKind(physicalRow.getRowKind());
+            out.collect(joinedRowData);
+        }
     }
 
     @Override
