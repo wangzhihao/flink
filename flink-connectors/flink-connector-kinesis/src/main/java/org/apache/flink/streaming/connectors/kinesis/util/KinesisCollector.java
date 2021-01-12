@@ -17,6 +17,12 @@
 
 package org.apache.flink.streaming.connectors.kinesis.util;
 
+import org.apache.flink.util.Collector;
+
+import java.util.ArrayDeque;
+import java.util.Queue;
+
+/** A helper class used in {@link DeserializationSchema}. */
 public final class KinesisCollector<T> implements Collector<T> {
     private final Queue<T> records = new ArrayDeque<>();
 

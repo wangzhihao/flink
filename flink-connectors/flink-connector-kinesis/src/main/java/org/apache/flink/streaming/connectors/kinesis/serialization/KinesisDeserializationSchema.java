@@ -20,6 +20,7 @@ package org.apache.flink.streaming.connectors.kinesis.serialization;
 import org.apache.flink.annotation.PublicEvolving;
 import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.java.typeutils.ResultTypeQueryable;
+import org.apache.flink.util.Collector;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -52,7 +53,6 @@ public interface KinesisDeserializationSchema<T> extends Serializable, ResultTyp
      * the produced records should be relatively small. Depending on the source implementation
      * records can be buffered in memory or collecting records might delay emitting checkpoint
      * barrier.
-     *
      *
      * @param recordValue the record's value as a byte array
      * @param partitionKey the record's partition key at the time of writing

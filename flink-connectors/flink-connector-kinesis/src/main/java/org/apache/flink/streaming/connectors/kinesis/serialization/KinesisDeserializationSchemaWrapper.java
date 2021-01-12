@@ -55,7 +55,7 @@ public class KinesisDeserializationSchemaWrapper<T> implements KinesisDeserializ
             String shardId,
             Collector<T> out)
             throws IOException {
-        return deserializationSchema.deserialize(recordValue, out);
+        deserializationSchema.deserialize(recordValue, out);
     }
 
     /*

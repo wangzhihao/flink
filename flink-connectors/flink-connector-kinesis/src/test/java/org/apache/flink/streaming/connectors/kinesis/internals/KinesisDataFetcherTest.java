@@ -54,6 +54,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.powermock.reflect.Whitebox;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -61,6 +62,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
@@ -155,8 +157,8 @@ public class KinesisDataFetcherTest extends TestLogger {
         assertEquals(numShards, testShardStates.size());
 
         for (int i = 0; i < numShards; i++) {
-            fetcher.emitRecordAndUpdateState(
-                    "record-" + i, 10L, i, new SequenceNumber("seq-num-1"));
+            fetcher.emitRecordsAndUpdateState(
+                    mkQueue("record-" + i), 10L, i, new SequenceNumber("seq-num-1"));
             assertEquals(
                     new SequenceNumber("seq-num-1"),
                     testShardStates.get(i).getLastProcessedSequenceNum());
@@ -166,7 +168,7 @@ public class KinesisDataFetcherTest extends TestLogger {
 
         // emitting a null (i.e., a corrupt record) should not produce any output, but still have
         // the shard state updated
-        fetcher.emitRecordAndUpdateState(null, 10L, 1, new SequenceNumber("seq-num-2"));
+        fetcher.emitRecordsAndUpdateState(mkQueue(null), 10L, 1, new SequenceNumber("seq-num-2"));
         assertEquals(
                 new SequenceNumber("seq-num-2"),
                 testShardStates.get(1).getLastProcessedSequenceNum());
@@ -881,16 +883,16 @@ public class KinesisDataFetcherTest extends TestLogger {
 
         StreamRecord<String> record1 =
                 new StreamRecord<>(String.valueOf(Long.MIN_VALUE), Long.MIN_VALUE);
-        fetcher.emitRecordAndUpdateState(
-                record1.getValue(), record1.getTimestamp(), shardIndex, seq);
+        fetcher.emitRecordsAndUpdateState(
+                mkQueue(record1.getValue()), record1.getTimestamp(), shardIndex, seq);
         Assert.assertEquals(record1, sourceContext.getCollectedOutputs().poll());
 
         fetcher.emitWatermark();
         Assert.assertTrue("potential watermark equals previous watermark", watermarks.isEmpty());
 
         StreamRecord<String> record2 = new StreamRecord<>(String.valueOf(1), 1);
-        fetcher.emitRecordAndUpdateState(
-                record2.getValue(), record2.getTimestamp(), shardIndex, seq);
+        fetcher.emitRecordsAndUpdateState(
+                mkQueue(record2.getValue()), record2.getTimestamp(), shardIndex, seq);
         Assert.assertEquals(record2, sourceContext.getCollectedOutputs().poll());
 
         fetcher.emitWatermark();
@@ -1013,5 +1015,11 @@ public class KinesisDataFetcherTest extends TestLogger {
         fetcher.shutdownFetcher();
 
         verify(kinesisV2).close();
+    }
+
+    private <T> Queue<T> mkQueue(T record) {
+        Queue<T> q = new ArrayDeque<T>();
+        q.add(record);
+        return q;
     }
 }

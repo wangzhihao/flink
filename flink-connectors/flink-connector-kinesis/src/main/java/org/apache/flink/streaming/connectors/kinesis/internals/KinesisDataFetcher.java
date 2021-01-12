@@ -72,6 +72,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -949,24 +950,26 @@ public class KinesisDataFetcher<T> {
             long recordTimestamp,
             int shardStateIndex,
             SequenceNumber lastSequenceNumber) {
-        ShardWatermarkState sws = shardWatermarks.get(shardStateIndex);
-        Preconditions.checkNotNull(
-                sws, "shard watermark state initialized in registerNewSubscribedShardState");
-        Watermark watermark = null;
-        if (sws.periodicWatermarkAssigner != null) {
-            recordTimestamp =
-                    sws.periodicWatermarkAssigner.extractTimestamp(record, sws.lastRecordTimestamp);
-            // track watermark per record since extractTimestamp has side effect
-            watermark = sws.periodicWatermarkAssigner.getCurrentWatermark();
-        }
-        sws.lastRecordTimestamp = recordTimestamp;
-        sws.lastUpdated = getCurrentTimeMillis();
-
         // emit the records, using the checkpoint lock to guarantee
         // atomicity of record emission and offset state update
         synchronized (checkpointLock) {
             T record;
             while ((record = records.poll()) != null) {
+                ShardWatermarkState sws = shardWatermarks.get(shardStateIndex);
+                Preconditions.checkNotNull(
+                        sws,
+                        "shard watermark state initialized in registerNewSubscribedShardState");
+                Watermark watermark = null;
+                if (sws.periodicWatermarkAssigner != null) {
+                    recordTimestamp =
+                            sws.periodicWatermarkAssigner.extractTimestamp(
+                                    record, sws.lastRecordTimestamp);
+                    // track watermark per record since extractTimestamp has side effect
+                    watermark = sws.periodicWatermarkAssigner.getCurrentWatermark();
+                }
+                sws.lastRecordTimestamp = recordTimestamp;
+                sws.lastUpdated = getCurrentTimeMillis();
+
                 RecordWrapper<T> recordWrapper = new RecordWrapper<>(record, recordTimestamp);
                 recordWrapper.shardStateIndex = shardStateIndex;
                 recordWrapper.lastSequenceNumber = lastSequenceNumber;

@@ -26,6 +26,7 @@ import org.apache.flink.streaming.connectors.kinesis.model.SentinelSequenceNumbe
 import org.apache.flink.streaming.connectors.kinesis.model.SequenceNumber;
 import org.apache.flink.streaming.connectors.kinesis.model.StreamShardHandle;
 import org.apache.flink.streaming.connectors.kinesis.serialization.KinesisDeserializationSchema;
+import org.apache.flink.streaming.connectors.kinesis.util.KinesisCollector;
 
 import com.amazonaws.services.kinesis.clientlibrary.types.UserRecord;
 import org.slf4j.Logger;
@@ -209,10 +210,10 @@ public class ShardConsumer<T> implements Runnable {
                         : new SequenceNumber(record.getSequenceNumber());
 
         fetcherRef.emitRecordsAndUpdateState(
-                 kinesisCollector.getRecords(),
-                 approxArrivalTimestamp,
-                 subscribedShardStateIndex,
-                 collectedSequenceNumber);
+                kinesisCollector.getRecords(),
+                approxArrivalTimestamp,
+                subscribedShardStateIndex,
+                collectedSequenceNumber);
 
         this.lastSequenceNum = collectedSequenceNumber;
     }
