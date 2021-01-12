@@ -165,14 +165,6 @@ public class KinesisDataFetcherTest extends TestLogger {
             assertEquals(
                     new StreamRecord<>("record-" + i, 10L), sourceContext.removeLatestOutput());
         }
-
-        // emitting a null (i.e., a corrupt record) should not produce any output, but still have
-        // the shard state updated
-        fetcher.emitRecordsAndUpdateState(mkQueue(null), 10L, 1, new SequenceNumber("seq-num-2"));
-        assertEquals(
-                new SequenceNumber("seq-num-2"),
-                testShardStates.get(1).getLastProcessedSequenceNum());
-        assertNull(sourceContext.removeLatestOutput()); // no output should have been collected
     }
 
     @Test
