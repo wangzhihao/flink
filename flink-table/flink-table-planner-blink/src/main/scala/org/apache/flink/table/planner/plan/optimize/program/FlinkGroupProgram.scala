@@ -65,7 +65,7 @@ class FlinkGroupProgram[OC <: FlinkOptimizeContext] extends FlinkOptimizeProgram
 
             if (LOG.isDebugEnabled) {
               LOG.debug(s"optimize $description cost ${end - start} ms.\n" +
-                s"optimize result:\n ${FlinkRelOptUtil.toString(result)}")
+                s"optimize result:\n ${FlinkRelOptUtil.toString(result, withChangelogTraits=true)}")
             }
             result
         }
