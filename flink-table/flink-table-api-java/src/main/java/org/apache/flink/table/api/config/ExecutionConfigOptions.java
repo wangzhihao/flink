@@ -108,17 +108,6 @@ public class ExecutionConfigOptions {
                                                     + "an additional stateful operator.")
                                     .build());
 
-    @Documentation.TableOption(execMode = Documentation.ExecMode.STREAMING)
-    public static final ConfigOption<Boolean> TABLE_CDC_ENABLED =
-            key("table.exec.source.cdc-enabled")
-                    .booleanType()
-                    .defaultValue(true)
-                    .withDescription(
-                            Description.builder()
-                                    .text(
-                                            "To turn off changelog normalize for json-merge function.")
-                                    .build());
-
     // ------------------------------------------------------------------------
     //  Sink Options
     // ------------------------------------------------------------------------
