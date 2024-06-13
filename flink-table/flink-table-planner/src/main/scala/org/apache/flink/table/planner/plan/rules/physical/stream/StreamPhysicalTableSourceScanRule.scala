@@ -63,9 +63,11 @@ class StreamPhysicalTableSourceScanRule(config: Config) extends ConverterRule(co
 
     val newScan = new StreamPhysicalTableSourceScan(rel.getCluster, traitSet, scan.getHints, table)
     val resolvedSchema = table.contextResolvedTable.getResolvedSchema
-
+    val enabled = false;
     if (
-      !scan.eventTimeSnapshotRequired && (isUpsertSource(resolvedSchema, table.tableSource) ||
+      enabled && !scan.eventTimeSnapshotRequired && (isUpsertSource(
+        resolvedSchema,
+        table.tableSource) ||
         isSourceChangeEventsDuplicate(resolvedSchema, table.tableSource, tableConfig))
     ) {
       // generate changelog normalize node
