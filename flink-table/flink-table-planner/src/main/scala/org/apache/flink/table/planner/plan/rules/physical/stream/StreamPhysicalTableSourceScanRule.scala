@@ -17,6 +17,7 @@
  */
 package org.apache.flink.table.planner.plan.rules.physical.stream
 
+import org.apache.flink.table.api.config.ExecutionConfigOptions
 import org.apache.flink.table.connector.source.ScanTableSource
 import org.apache.flink.table.planner.connectors.DynamicSourceUtils.{isSourceChangeEventsDuplicate, isUpsertSource}
 import org.apache.flink.table.planner.plan.`trait`.FlinkRelDistribution
@@ -63,9 +64,11 @@ class StreamPhysicalTableSourceScanRule(config: Config) extends ConverterRule(co
 
     val newScan = new StreamPhysicalTableSourceScan(rel.getCluster, traitSet, scan.getHints, table)
     val resolvedSchema = table.contextResolvedTable.getResolvedSchema
-
+    val enabled = tableConfig.get(ExecutionConfigOptions.TABLE_CDC_ENABLED);
     if (
-      !scan.eventTimeSnapshotRequired && (isUpsertSource(resolvedSchema, table.tableSource) ||
+      enabled && !scan.eventTimeSnapshotRequired && (isUpsertSource(
+        resolvedSchema,
+        table.tableSource) ||
         isSourceChangeEventsDuplicate(resolvedSchema, table.tableSource, tableConfig))
     ) {
       // generate changelog normalize node
